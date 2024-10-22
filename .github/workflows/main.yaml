@@ -31,8 +31,8 @@ jobs:
       run: go test -v ./...
       env:
         # False values to satisfy environment checks.
-        NEXTDNS_PROFILE: bhu7e3
-        NEXTDNS_API_KEY: 1234567890abcdef
+        NEXTDNS_PROFILE: 85d564
+        NEXTDNS_API_KEY: f31f2871d328a52a45fefadc09a1c67d0dd5d53d
 
   release:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
