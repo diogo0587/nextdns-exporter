@@ -1,17 +1,17 @@
-const express = require('express');
+const { createServer } = require('http');
 const axios = require('axios');
-const app = express();
-const port = process.env.PORT || 3000;
 
-app.get('/', async (req, res) => {
+const server = createServer(async (req, res) => {
     try {
-        const response = await axios.get('https://api.nextdns.io/...');  // Substitua pelo endpoint correto da API
-        res.json(response.data);
+        const response = await axios.get('https://api.nextdns.io/...'); // Substitua pelo endpoint correto da API
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(response.data));
     } catch (error) {
-        res.status(500).send('Erro ao carregar os dados');
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Erro ao carregar os dados');
     }
 });
 
-app.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}`);
+server.listen(3000, () => {
+    console.log('Servidor rodando na porta 3000');
 });
