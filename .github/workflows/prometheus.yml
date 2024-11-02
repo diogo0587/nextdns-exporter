@@ -1,0 +1,27 @@
+name: Setup Prometheus
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  setup-prometheus:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+        docker-compose up -d
+
+    - name: Verify setup
+      run: |
+        docker-compose ps
