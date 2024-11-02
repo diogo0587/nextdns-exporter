@@ -1,7 +1,7 @@
 # nextdns-exporter
 
-[![Main](https://github.com/raylas/nextdns-exporter/actions/workflows/main.yaml/badge.svg)](https://github.com/raylas/nextdns-exporter/actions/workflows/main.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/raylas/nextdns-exporter)](https://goreportcard.com/report/github.com/raylas/nextdns-exporter)
+[![Main](https://github.com/raylas/nextdns-exporter/actions/workflows/main.yaml/badge.svg)](https://github.com/diogo0587/nextdns-exporter/actions/workflows/main.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/diogo0587/nextdns-exporter)](https://goreportcard.com/report/github.com/diogo0587/nextdns-exporter)
 
 A [Prometheus exporter](https://prometheus.io/docs/instrumenting/exporters/) for [NextDNS data](https://nextdns.github.io/api/#analytics).
 
@@ -23,10 +23,10 @@ Recommended scrape timeout is `10` seconds.
 
 ### Binary
 
-Either [download a recent release](https://github.com/raylas/nextdns-exporter/releases) or compile the binary yourself (`go build -o nextdns-exporter`) and run:
+Either [download a recent release](https://github.com/diogo0587/nextdns-exporter/releases) or compile the binary yourself (`go build -o nextdns-exporter`) and run:
 ```sh
-export NEXTDNS_PROFILE=<profile_id>
-export NEXTDNS_API_KEY=<api_key>
+export NEXTDNS_PROFILE="85d564"
+export NEXTDNS_API_KEY="f31f2871d328a52a45fefadc09a1c67d0dd5d53d"
 ./nextdns-exporter
 2022-11-19T12:39:34.479-0800 [INFO]  starting exporter: port=:9948 path=/metrics
 ```
@@ -36,8 +36,8 @@ export NEXTDNS_API_KEY=<api_key>
 ```sh
 docker run -d \
   -p 9948:9948 \
-  -e NEXTDNS_PROFILE=<profile_id> \
-  -e NEXTDNS_API_KEY=<api_key> \
+  -e NEXTDNS_PROFILE="85d564" \
+  -e NEXTDNS_API_KEY="f31f2871d328a52a45fefadc09a1c67d0dd5d53d" \
   ghcr.io/raylas/nextdns-exporter
 ```
 
@@ -45,8 +45,8 @@ docker run -d \
 
 The following will create a local stack of the exporter, Prometheus, and Grafana:
 ```sh
-NEXTDNS_PROFILE=<profile_id> \
-NEXTDNS_API_KEY=<api_key> \
+NEXTDNS_PROFILE="85d564" \
+NEXTDNS_API_KEY="f31f2871d328a52a45fefadc09a1c67d0dd5d53d" \
 docker-compose up -d
 ```
 
