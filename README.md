@@ -28,7 +28,7 @@ Either [download a recent release](https://github.com/diogo0587/nextdns-exporter
 export NEXTDNS_PROFILE="85d564"
 export NEXTDNS_API_KEY="f31f2871d328a52a45fefadc09a1c67d0dd5d53d"
 ./nextdns-exporter
-2022-11-19T12:39:34.479-0800 [INFO]  starting exporter: port=:9948 path=/metrics
+
 ```
 
 ### Docker
