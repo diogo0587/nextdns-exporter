@@ -1,97 +1,73 @@
-name: Main
+name: Setup Prometheus, Grafana, and NextDNS Exporter
 
 on:
-  pull_request:
   push:
     branches:
-    - main
-    tags:
-    - '*'
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  GO_VERSION: ^1.19.3
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-  test:
+  setup-and-run:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: ${{ env.GO_VERSION }}
-
-    - name: Run tests
-      run: go test -v ./...
-      env:
-        # False values to satisfy environment checks.
-        NEXTDNS_PROFILE: 85d564
-        NEXTDNS_API_KEY: f31f2871d328a52a45fefadc09a1c67d0dd5d53d
-
-  release:
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: ${{ env.GO_VERSION }}
-
-    - name: Configure environment
-      id: context
-      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
-
-    - name: Release
-      uses: goreleaser/goreleaser-action@v5
-      with:
-        distribution: goreleaser
-        version: latest
-        args: release --rm-dist
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-      
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Log in to registry
+    - name: Set up Docker
       run: |
-        docker login \
-          -u ${{ github.actor }} \
-          -p ${{ secrets.GITHUB_TOKEN }} \
-          ${{ env.REGISTRY }}
+        sudo apt-get update
+        sudo apt-get install -y docker.io
 
-    - name: Set image metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=raw,value=${{ steps.context.outputs.tag }}
-        flavor: |
-          latest=true
-    
-    - name: Build and push image
-      uses: docker/build-push-action@v6
-      with:
-        context: .
-        platforms: linux/amd64,linux/arm64
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        build-args: |
-          VERSION=${{ steps.context.outputs.tag }}
+    - name: Create Docker Compose file
+      run: |
+        echo 'version: "3.7"
+        
+        services:
+          nextdns-exporter:
+            build:
+              context: .
+            restart: unless-stopped
+            ports:
+              - 9948:9948
+            environment:
+              NEXTDNS_PROFILE: ${{ secrets.NEXTDNS_PROFILE }}
+              NEXTDNS_API_KEY: ${{ secrets.NEXTDNS_API_KEY }}
+              NEXTDNS_RESULT_WINDOW: -1m
+
+          prometheus:
+            image: prom/prometheus:v2.40.3
+            restart: unless-stopped
+            ports:
+              - 9090:9090
+            volumes:
+              - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+          grafana:
+            image: grafana/grafana-oss:9.2.6
+            restart: unless-stopped
+            ports:
+              - 3000:3000
+            volumes:
+              - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+              - ./grafana:/etc/grafana/provisioning' > docker-compose.yml
+
+    - name: Start Docker Compose
+      run: |
+        docker-compose up -d
+
+    - name: Wait for services to be ready
+      run: |
+        sleep 60
+
+    - name: Run Prometheus query to check if services are running
+      run: |
+        curl -s "http://localhost:9090/api/v1/query?query=up" | jq .
+
+    - name: Stop Docker Compose
+      if: always()
+      run: |
+        docker-compose down
