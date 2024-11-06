@@ -30,6 +30,26 @@
             text-align: center;
             margin-top: 20px;
         }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 <body>
@@ -37,14 +57,28 @@
         <h1>NextDNS Exporter</h1>
         <p>Welcome to the NextDNS Exporter monitoring page!</p>
         <div class="link">
-            <a href="http://localhost:9948">Access NextDNS Exporter</a>
+            <a href="nextdns-exporter.html">Access NextDNS Exporter</a>
         </div>
         <div class="link">
-            <a href="http://localhost:9090">Access Prometheus</a>
+            <a href="prometheus.html">Access Prometheus</a>
         </div>
         <div class="link">
-            <a href="http://localhost:3000">Access Grafana</a>
+            <a href="grafana.html">Access Grafana</a>
         </div>
+        <input type="text" id="urlInput" placeholder="Enter shortened URL">
+        <button id="unshortenButton">Unshorten URL</button>
+        <div id="result" class="result"></div>
+        <table id="resultTable">
+            <thead>
+                <tr>
+                    <th>Original URL</th>
+                    <th>Expanded URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Results will be inserted here -->
+            </tbody>
+        </table>
     </div>
     <script src="index.js"></script>
 </body>
