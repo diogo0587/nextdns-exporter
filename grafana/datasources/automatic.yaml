@@ -1,9 +1,12 @@
 apiVersion: 1
 
 datasources:
-- name: Prometheus
-  type: prometheus
-  access: proxy
-  url: http://prometheus:9090
-  isDefault: true
-  editable: true
+  - name: grafanacloud-diogos0587-prom
+    type: prometheus
+    access: proxy
+    url: https://prometheus-prod-40-prod-sa-east-1.grafana.net/api/prom
+    isDefault: true
+    basicAuth: true
+    basicAuthUser: 1680573
+    secureJsonData:
+      basicAuthPassword: glc_eyJvIjoiMTE3MTg2NSIsIm4iOiJzdGFjay05ODI0MTQtaG0tcmVhZC1uZXh0ZG5zIiwiayI6Im9NSHY2d3VWNjUycjU3Qkw0OWg0ajRVYiIsIm0iOnsiciI6InByb2Qtc2EtZWFzdC0xIn19
