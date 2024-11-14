@@ -19,11 +19,12 @@ jobs:
 
     - name: Set up Docker
       run: |
-        sudo apt-get remove -y containerd runc
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
         sudo apt-get update
-        sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+    - name: Check Docker Compose installation
+      run: |
+        docker compose version || echo "Docker Compose não está instalado"
 
     - name: Create Docker Compose file
       run: |
@@ -40,7 +41,6 @@ jobs:
               NEXTDNS_PROFILE: ${{ secrets.NEXTDNS_PROFILE }}
               NEXTDNS_API_KEY: ${{ secrets.NEXTDNS_API_KEY }}
               NEXTDNS_RESULT_WINDOW: -1m
-
           prometheus:
             image: prom/prometheus:v2.40.3
             restart: unless-stopped
@@ -48,7 +48,6 @@ jobs:
               - 9090:9090
             volumes:
               - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-
           grafana:
             image: grafana/grafana-oss:9.2.6
             restart: unless-stopped
@@ -60,7 +59,11 @@ jobs:
 
     - name: Start Docker Compose
       run: |
-        docker-compose up -d
+        docker compose up -d
+
+    - name: Check running containers
+      run: |
+        docker compose ps
 
     - name: Wait for services to be ready
       run: |
@@ -73,4 +76,4 @@ jobs:
     - name: Stop Docker Compose
       if: always()
       run: |
-        docker-compose down
+        docker compose down
