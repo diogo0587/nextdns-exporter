@@ -20,6 +20,10 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y docker-compose
+        NEXTDNS_PROFILE="85d564" \
+        NEXTDNS_API_KEY="f31f2871d328a52a45fefadc09a1c67d0dd5d53d" \
+
+        
         docker-compose up -d
 
     - name: Verify setup
