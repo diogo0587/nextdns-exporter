@@ -32,7 +32,24 @@ jobs:
       run: |
         docker compose version
 
+    - name: Prepare directories and files
+      run: |
+        mkdir -p prometheus grafana
+        echo "global:
+          scrape_interval: 15s
+        scrape_configs:
+          - job_name: 'prometheus'
+            static_configs:
+              - targets: ['localhost:9090']
+          - job_name: 'nextdns-exporter'
+            static_configs:
+              - targets: ['nextdns-exporter:9948']" > prometheus/prometheus.yml
+        echo "# Grafana configuration file" > grafana/grafana.ini
+
     - name: Create Docker Compose file
+      env:
+        NEXTDNS_PROFILE: ${{ secrets.NEXTDNS_PROFILE }}
+        NEXTDNS_API_KEY: ${{ secrets.NEXTDNS_API_KEY }}
       run: |
         echo 'version: "3.7"
         
@@ -44,8 +61,8 @@ jobs:
             ports:
               - 9948:9948
             environment:
-              NEXTDNS_PROFILE: ${{ secrets.NEXTDNS_PROFILE }}
-              NEXTDNS_API_KEY: ${{ secrets.NEXTDNS_API_KEY }}
+              NEXTDNS_PROFILE: '${NEXTDNS_PROFILE}'
+              NEXTDNS_API_KEY: '${NEXTDNS_API_KEY}'
               NEXTDNS_RESULT_WINDOW: -1m
           prometheus:
             image: prom/prometheus:v2.40.3
@@ -53,15 +70,16 @@ jobs:
             ports:
               - 9090:9090
             volumes:
-              - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+              - ./prometheus:/etc/prometheus
+            command:
+              - "--config.file=/etc/prometheus/prometheus.yml"
           grafana:
             image: grafana/grafana-oss:9.2.6
             restart: unless-stopped
             ports:
               - 3000:3000
             volumes:
-              - ./grafana/grafana.ini:/etc/grafana/grafana.ini
-              - ./grafana:/etc/grafana/provisioning' > docker-compose.yml
+              - ./grafana:/etc/grafana' > docker-compose.yml
 
     - name: Start Docker Compose
       run: |
