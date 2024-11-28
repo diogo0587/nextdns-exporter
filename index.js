@@ -3,7 +3,7 @@ const axios = require('axios');
 
 const server = createServer(async (req, res) => {
     try {
-        const response = await axios.get('https://api.nextdns.io/...'); // Substitua pelo endpoint correto da API
+        const response = await axios.get('https://api.nextdns.io/profiles/85d564'); // Substitua pelo endpoint correto da API
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(response.data));
     } catch (error) {
