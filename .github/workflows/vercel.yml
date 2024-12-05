@@ -23,9 +23,15 @@ jobs:
 
       - name: Create Next.js App
         run: |
-          npx create-next-app@latest nextdns-dashboard --typescript --tailwind --app --src-dir --import-alias "@/*"
+          npx create-next-app@latest nextdns-dashboard --typescript --tailwind --app --src-dir --import-alias "@/*" --use-npm
           cd nextdns-dashboard
-          npm install swr axios @vercel/analytics
+          npm install --legacy-peer-deps swr@latest axios@latest @vercel/analytics@latest
+
+      - name: Update package.json
+        run: |
+          cd nextdns-dashboard
+          jq '.dependencies.react = "^18.2.0" | .dependencies["react-dom"] = "^18.2.0"' package.json > temp.json && mv temp.json package.json
+          npm install --legacy-peer-deps
 
       - name: Create API Route
         run: |
@@ -67,7 +73,7 @@ jobs:
 
           export default function Home() {
             const { data, error } = useSWR('/api/logs', fetcher, {
-              refreshInterval: 60000 // Atualiza a cada minuto
+              refreshInterval: 60000
             })
 
             if (error) return <div>Failed to load</div>
@@ -116,4 +122,3 @@ jobs:
         run: |
           cd nextdns-dashboard
           vercel deploy --token ${VERCEL_TOKEN} --yes
-          
