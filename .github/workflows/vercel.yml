@@ -21,15 +21,17 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Install pnpm
+        run: npm install -g pnpm
+
       - name: Create Next.js App
         run: |
-          npx create-next-app@latest nextdns-dashboard --typescript --tailwind --app --src-dir --import-alias "@/*" --use-npm
+          pnpm create next-app nextdns-dashboard --typescript --tailwind --app --src-dir --import-alias "@/*"
 
       - name: Install dependencies
         run: |
           cd nextdns-dashboard
-          npm install swr@latest --legacy-peer-deps
-          npm install --legacy-peer-deps
+          pnpm add swr@latest axios@latest @vercel/analytics@latest
 
       - name: Create API Route
         run: |
@@ -109,7 +111,7 @@ jobs:
           EOF
 
       - name: Install Vercel CLI
-        run: npm i -g vercel@latest
+        run: pnpm add -g vercel@latest
 
       - name: Deploy to Vercel
         env:
