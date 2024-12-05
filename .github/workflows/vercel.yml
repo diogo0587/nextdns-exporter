@@ -25,11 +25,16 @@ jobs:
         run: |
           npx create-next-app@latest nextdns-dashboard --typescript --tailwind --app --src-dir --import-alias "@/*" --use-npm
 
+      - name: Configure npm
+        run: |
+          cd nextdns-dashboard
+          echo "legacy-peer-deps=true" > .npmrc
+
       - name: Install dependencies
         run: |
           cd nextdns-dashboard
-          npm install --legacy-peer-deps
-          npm install swr@latest axios@latest @vercel/analytics@latest
+          npm install react@18.2.0 react-dom@18.2.0 --save --legacy-peer-deps
+          npm install swr@latest axios@latest @vercel/analytics@latest --legacy-peer-deps
 
       - name: Create API Route
         run: |
@@ -116,14 +121,8 @@ jobs:
             "version": 2,
             "buildCommand": "npm run build",
             "devCommand": "npm run dev",
-            "installCommand": "npm install",
-            "framework": "nextjs",
-            "builds": [
-              {
-                "src": "package.json",
-                "use": "@vercel/next"
-              }
-            ]
+            "installCommand": "npm install --legacy-peer-deps",
+            "framework": "nextjs"
           }
           EOF
 
