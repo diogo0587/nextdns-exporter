@@ -1,0 +1,119 @@
+name: Deploy NextDNS Dashboard to Vercel
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Create Next.js App
+        run: |
+          npx create-next-app@latest nextdns-dashboard --typescript --tailwind --app --src-dir --import-alias "@/*"
+          cd nextdns-dashboard
+          npm install swr axios @vercel/analytics
+
+      - name: Create API Route
+        run: |
+          mkdir -p nextdns-dashboard/src/app/api/logs
+          cat > nextdns-dashboard/src/app/api/logs/route.ts << 'EOF'
+          import { NextResponse } from 'next/server'
+
+          export async function GET() {
+            const NEXTDNS_API_KEY = "f31f2871d328a52a45fefadc09a1c67d0dd5d53d"
+            const NEXTDNS_PROFILE = "85d564"
+
+            try {
+              const response = await fetch(
+                `https://api.nextdns.io/profiles/${NEXTDNS_PROFILE}/logs`,
+                {
+                  headers: {
+                    'X-Api-Key': NEXTDNS_API_KEY,
+                  },
+                }
+              )
+
+              const data = await response.json()
+              return NextResponse.json(data)
+            } catch (error) {
+              return NextResponse.json({ error: 'Failed to fetch NextDNS logs' }, { status: 500 })
+            }
+          }
+          EOF
+
+      - name: Create Dashboard Page
+        run: |
+          cat > nextdns-dashboard/src/app/page.tsx << 'EOF'
+          'use client'
+          
+          import { useEffect, useState } from 'react'
+          import useSWR from 'swr'
+
+          const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+          export default function Home() {
+            const { data, error } = useSWR('/api/logs', fetcher, {
+              refreshInterval: 60000 // Atualiza a cada minuto
+            })
+
+            if (error) return <div>Failed to load</div>
+            if (!data) return <div>Loading...</div>
+
+            return (
+              <main className="p-8">
+                <h1 className="text-3xl font-bold mb-8">NextDNS Logs Dashboard</h1>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white border">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="px-4 py-2">Timestamp</th>
+                        <th className="px-4 py-2">Domain</th>
+                        <th className="px-4 py-2">Status</th>
+                        <th className="px-4 py-2">Protocol</th>
+                        <th className="px-4 py-2">Client IP</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.data?.map((log: any, index: number) => (
+                        <tr key={index} className="border-t">
+                          <td className="px-4 py-2">{new Date(log.timestamp).toLocaleString()}</td>
+                          <td className="px-4 py-2">{log.domain}</td>
+                          <td className="px-4 py-2">{log.status}</td>
+                          <td className="px-4 py-2">{log.protocol}</td>
+                          <td className="px-4 py-2">{log.clientIp}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </main>
+            )
+          }
+          EOF
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          cd nextdns-dashboard
+          vercel deploy --token ${VERCEL_TOKEN} --yes
+          
