@@ -24,14 +24,12 @@ jobs:
       - name: Create Next.js App
         run: |
           npx create-next-app@latest nextdns-dashboard --typescript --tailwind --app --src-dir --import-alias "@/*" --use-npm
-          cd nextdns-dashboard
-          npm install --legacy-peer-deps swr@latest axios@latest @vercel/analytics@latest
 
-      - name: Update package.json
+      - name: Install dependencies
         run: |
           cd nextdns-dashboard
-          jq '.dependencies.react = "^18.2.0" | .dependencies["react-dom"] = "^18.2.0"' package.json > temp.json && mv temp.json package.json
           npm install --legacy-peer-deps
+          npm install swr@latest axios@latest @vercel/analytics@latest
 
       - name: Create API Route
         run: |
@@ -111,6 +109,24 @@ jobs:
           }
           EOF
 
+      - name: Create vercel.json
+        run: |
+          cat > nextdns-dashboard/vercel.json << 'EOF'
+          {
+            "version": 2,
+            "buildCommand": "npm run build",
+            "devCommand": "npm run dev",
+            "installCommand": "npm install",
+            "framework": "nextjs",
+            "builds": [
+              {
+                "src": "package.json",
+                "use": "@vercel/next"
+              }
+            ]
+          }
+          EOF
+
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
 
@@ -121,4 +137,4 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           cd nextdns-dashboard
-          vercel deploy --token ${VERCEL_TOKEN} --yes
+          vercel deploy --prod --token ${VERCEL_TOKEN}
