@@ -1,4 +1,4 @@
-name: Deploy NextDNS Dashboard to Vercel with Perplexity Integration
+name: Deploy NextDNS Dashboard to Vercel
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  validate-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -25,35 +25,11 @@ jobs:
         run: |
           npx create-next-app@latest nextdns-dashboard --typescript --tailwind --app --src-dir --import-alias "@/*" --use-npm
 
-      - name: Update package.json
-        run: |
-          cd nextdns-dashboard
-          jq '.scripts.build = "next build"' package.json > temp.json && mv temp.json package.json
-          jq '.scripts.start = "next start"' package.json > temp.json && mv temp.json package.json
-
       - name: Install dependencies
         run: |
           cd nextdns-dashboard
+          npm install swr@latest --legacy-peer-deps
           npm install --legacy-peer-deps
-
-      - name: Validate configuration with Perplexity
-        run: |
-          curl -X POST https://api.perplexity.ai/chat/completions \
-          -H "Authorization: Bearer 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" \
-          -H "Content-Type: application/json" \
-          -d '{
-            "model": "llama-3.1-sonar-small-128k-online",
-            "messages": [
-              {
-                "role": "system",
-                "content": "Validate the Next.js configuration and suggest optimizations."
-              },
-              {
-                "role": "user",
-                "content": "Check the Next.js configuration in this repository."
-              }
-            ]
-          }'
 
       - name: Create API Route
         run: |
@@ -88,18 +64,17 @@ jobs:
           cat > nextdns-dashboard/src/app/page.tsx << 'EOF'
           'use client'
           
-          import { useEffect, useState } from 'react'
           import useSWR from 'swr'
 
           const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
           export default function Home() {
-            const { data, error } = useSWR('/api/logs', fetcher, {
+            const { data, error, isLoading } = useSWR('/api/logs', fetcher, {
               refreshInterval: 60000
             })
 
             if (error) return <div>Failed to load</div>
-            if (!data) return <div>Loading...</div>
+            if (isLoading) return <div>Loading...</div>
 
             return (
               <main className="p-8">
@@ -133,18 +108,6 @@ jobs:
           }
           EOF
 
-      - name: Create vercel.json
-        run: |
-          cat > nextdns-dashboard/vercel.json << 'EOF'
-          {
-            "version": 2,
-            "buildCommand": "npm run build",
-            "devCommand": "npm run dev",
-            "installCommand": "npm install --legacy-peer-deps",
-            "framework": "nextjs"
-          }
-          EOF
-
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
 
@@ -153,7 +116,6 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          GITHUB_TOKEN: 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
         run: |
           cd nextdns-dashboard
           vercel pull --yes --environment=production --token=${VERCEL_TOKEN}
