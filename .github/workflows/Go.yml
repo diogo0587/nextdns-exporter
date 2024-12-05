@@ -1,0 +1,26 @@
+name: Build and Run NextDNS Exporter
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Build NextDNS Exporter
+        run: go build -o nextdns-exporter
+
+      - name: Run NextDNS Exporter
+        env:
+          NEXTDNS_PROFILE: "85d564"
+          NEXTDNS_API_KEY: "f31f2871d328a52a45fefadc09a1c67d0dd5d53d"
+        run: ./nextdns-exporter
